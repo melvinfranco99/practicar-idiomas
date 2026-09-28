@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speak Up · Practica inglés hablado</title>
+  <meta name="description" content="Practica inglés hablado con una IA como si tuvieras a una persona delante. Niveles A1–C2, correcciones en español y subtítulos.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🗣️ <strong>Speak Up</strong> <span class="muted">· inglés hablado</span></div>
+    <button id="btnSettings" class="icon-btn" title="Ajustes">⚙️</button>
+  </header>
+
+  <!-- Pantalla de configuración -->
+  <main id="setup" class="screen">
+    <section class="card">
+      <h1>Practica inglés hablando</h1>
+      <p class="muted">Elige tu nivel y un tema. La IA te hablará como una persona, te hará preguntas sin parar y te corregirá en español con cariño.</p>
+
+      <h2>1. Tu nivel</h2>
+      <div id="levels" class="chips">
+        <button data-level="A1">A1<small>Principiante</small></button>
+        <button data-level="A2">A2<small>Básico</small></button>
+        <button data-level="B1">B1<small>Intermedio</small></button>
+        <button data-level="B2">B2<small>Int. alto</small></button>
+        <button data-level="C1">C1<small>Avanzado</small></button>
+        <button data-level="C2">C2<small>Maestría</small></button>
+      </div>
+
+      <h2>2. Tema de conversación</h2>
+      <div id="topics" class="chips topics"></div>
+      <input id="customTopic" type="text" placeholder="…o escribe tu propio tema (p. ej. «una entrevista de trabajo»)">
+
+      <h2>3. Opciones</h2>
+      <label class="switch"><input type="checkbox" id="optSubs" checked> <span>Subtítulos en inglés</span></label>
+      <label class="switch"><input type="checkbox" id="optSubsEs"> <span>Traducción al español bajo los subtítulos</span></label>
+      <label class="switch"><input type="checkbox" id="optHandsFree" checked> <span>Manos libres (el micro se activa solo cuando la IA termina de hablar)</span></label>
+      <label class="switch"><input type="checkbox" id="optSpeakCorrections" checked> <span>Leer las correcciones en voz alta (en español)</span></label>
+
+      <p id="apiKeyWarning" class="warn hidden">⚠️ Falta tu API key de Anthropic. Ábrela en <a href="#" id="linkSettings">Ajustes ⚙️</a>.</p>
+      <button id="btnStart" class="primary big">Empezar a hablar ▶</button>
+      <p id="browserWarning" class="warn hidden">⚠️ Tu navegador no soporta reconocimiento de voz. Usa Google Chrome o Microsoft Edge (puedes escribir igualmente).</p>
+    </section>
+  </main>
+
+  <!-- Pantalla de conversación -->
+  <main id="talk" class="screen hidden">
+    <div class="talk-head">
+      <button id="btnBack" class="ghost">← Salir</button>
+      <div class="pill" id="talkInfo">B1 · Travel</div>
+      <label class="switch mini"><input type="checkbox" id="toggleSubs"> <span>CC</span></label>
+    </div>
+
+    <div class="stage">
+      <div id="avatar" class="avatar"><span>🙂</span></div>
+      <div id="status" class="status">Preparando…</div>
+      <div id="subtitles" class="subtitles">
+        <p id="subEn"></p>
+        <p id="subEs" class="es"></p>
+      </div>
+      <div id="interim" class="interim"></div>
+    </div>
+
+    <div id="correction" class="correction hidden"></div>
+
+    <div class="controls">
+      <button id="btnMic" class="mic" title="Hablar">🎤</button>
+      <div class="side-controls">
+        <button id="btnRepeat" class="ghost" title="Repetir">🔁 Repetir</button>
+        <button id="btnSlow" class="ghost" title="Repetir despacio">🐢 Despacio</button>
+        <button id="btnHint" class="ghost" title="Ayuda">💡 ¿Qué digo?</button>
+      </div>
+    </div>
+
+    <form id="textForm" class="text-form">
+      <input id="textInput" type="text" placeholder="También puedes escribir tu respuesta en inglés…" autocomplete="off">
+      <button class="primary">Enviar</button>
+    </form>
+
+    <details class="history">
+      <summary>Ver conversación completa</summary>
+      <div id="log"></div>
+    </details>
+  </main>
+
+  <!-- Ajustes -->
+  <dialog id="settings">
+    <form method="dialog" class="card">
+      <h2>Ajustes</h2>
+      <label>API key de Anthropic
+        <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+      </label>
+      <p class="muted small">Se guarda solo en este navegador (localStorage) y se envía directamente a la API de Anthropic. Consíguela en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+      <label>Modelo
+        <select id="model">
+          <option value="claude-opus-5">Claude Opus 5 (mejor calidad)</option>
+          <option value="claude-sonnet-5">Claude Sonnet 5 (equilibrado)</option>
+          <option value="claude-haiku-4-5">Claude Haiku 4.5 (más rápido y barato)</option>
+        </select>
+      </label>
+      <label>Voz en inglés
+        <select id="voice"></select>
+      </label>
+      <label>Velocidad de voz: <span id="rateLabel">1.0</span>
+        <input id="rate" type="range" min="0.6" max="1.3" step="0.05" value="1">
+      </label>
+      <label>Si me quedo callado, la IA me habla tras (segundos)
+        <input id="silence" type="number" min="5" max="60" value="12">
+      </label>
+      <div class="row">
+        <button class="primary" value="ok">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
